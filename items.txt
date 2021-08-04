@@ -1,0 +1,5 @@
+air
+earth
+fire
+water
+air + earth = dust
