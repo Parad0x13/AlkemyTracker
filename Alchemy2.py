@@ -2,162 +2,214 @@ import re
 import msvcrt
 
 UNKNOWN = "?"
+NOTHING = "nothing"
+LEVEL_LOW = "+"
+LEVEL_MED = "?"
+LEVEL_HIGH = "!"
 
 class Alchemy:
     def __init__(self):
         self.recipes = {}
-        self.recipes = {("air", "earth"): "dust"}
+        #self.recipes = {("air", "earth"): "dust"}
 
+        self.loadSave()
+
+    def loadSave(self):
         filename = "savefile.txt"
 
         f = open(filename, "r+")
         lines = f.read().splitlines()
 
-        # First we need to iterate through and find every possible item/recipe available
+        # The very first thing we need to do is create a listing of every item and recipe mentioned in the savefile
         itemsFound = []
         recipesFound = {}
         for line in lines:
-            a = re.split('\+|=', line)
+            a = re.split("\+|=", line)
             for n in range(len(a)): a[n] = a[n].strip()    # [TODO] Find a more elegant way of doing this...
 
-            # Here we merge lists to account for all possible items
+            # Here we merge whatever items we found into all possible items
             itemsFound += a
 
-            # Here we account for existing recipes
+            # Here we account for any recipes found
             if len(a) == 3: recipesFound[(a[0], a[1])] = a[2]
 
             # Here we error check for any erronous data in the savefile
             assert len(a) == 1 or len(a) == 3, "Incorrect data presented for line {}".format(line)
 
+        # Ensure we have no duplicates
+        itemsFound = list(set(itemsFound))
+        itemsFound.sort()    # Not needed but I like it anyways
+
+        # Now we add all our found items to our instance
+        # This will create recipes for every possible item match
         for item in itemsFound: self.addItem(item)
+
+        # Now we add all our found recipes to our instance
         for recipe in recipesFound: self.addRecipe(recipe, recipesFound[recipe])
 
+    # This is accomplished by iterating through every recipe and finding all possible items
     def getItems(self):
-        retVal = []
+        items = []
 
-        # {(a, b): c} or {inputs: output}
         for recipe in self.recipes:
-            retVal.append(recipe[0])
-            retVal.append(recipe[1])
-            retVal.append(self.recipes[recipe])
+            items.append(recipe[0])
+            items.append(recipe[1])
+            if self.recipes[recipe] != UNKNOWN:
+                items.append(self.recipes[recipe])
 
-        retVal = list(set(retVal))
-        try: retVal.remove(UNKNOWN)
-        except: pass
-        retVal.sort()
-        return retVal
+        items = list(set(items))
+        items.sort()    # Not needed but I like it anyways
 
-    def addItem(self, newItem = None):
-        items = self.getItems()
+        return items
+
+    def addItem(self, item = None):
+        if item != None: self.log("Attempting to add item {}".format(item))
 
         # Process user input
-        if newItem == None:
-            newItem = input("Name of item: ")
-            if newItem in items:
-                print("That item already exists")
-                return
-            self.addItem(newItem)
+        if item == None:
+            self.log("Attempting to add a user specified item")
 
-        # Here we create a recipe for our item against all other items that exist
-        self.addRecipe((newItem, newItem), UNKNOWN)
-        for item in items:
-            if item == UNKNOWN: continue
-            # Here we just sort the two input values by alpha so they are standardized... for now!
-            # This is a VERY VERY VERY dumb way of doing this...
-            # [TODO] Fix this nonsense
-            a = item
-            b = newItem
-            c = UNKNOWN
+            item = input("Item name: ").strip()
+            self.addItem(item)
 
-            if b < a:
-                a = newItem
-                b = item
+            return
 
-            self.addRecipe((a, b), c)
-
-        return
-
-    def removeItem(self, oldItem = None):
         items = self.getItems()
 
+        if item in items:
+            self.log("That item already exists", level = LEVEL_MED)
+            return
+
+        self.addRecipe((item, item), UNKNOWN)
+        for _ in items: self.addRecipe((_, item), UNKNOWN)
+
+    def removeItem(self, item = None):
+        if item != None: self.log("Attempting to remove item {}".format(item))
+
         # Process user input
-        if oldItem == None:
-            oldItem = input("Name of item: ")
-            if oldItem not in items:
-                print("That item does not exist")
-                return
-            self.removeItem(oldItem)
+        if item == None:
+            self.log("Attempting to remove a user specified item")
 
-        oldRecipes = []
-        for recipe in self.recipes:
-            if recipe[0] == oldItem: oldRecipes.append(recipe)
-            elif recipe[1] == oldItem: oldRecipes.append(recipe)
-            elif self.recipes[recipe] == oldItem: oldRecipes.append(recipe)
+            item = input("Item name: ").strip()
+            self.removeItem(item)
 
-        for oldRecipe in oldRecipes: self.removeRecipe(oldRecipe)
-        print(self.recipes)
+            return
+
+        items = self.getItems()
+
+        if item not in items:
+            self.log("That item does not exist", level = LEVEL_MED)
+            return
+
+        recipes = self.getRecipesContainingItem(item)
+        for recipe in recipes: self.removeRecipe(recipe)
 
     def renderItems(self):
         items = self.getItems()
         for item in items: print(item)
+        print("\ndiscovered {} items".format(len(items)))
 
     def addRecipe(self, inputs = None, output = None):
-        if UNKNOWN in inputs: return
+        if inputs != None and output != None: self.log("Attempting to add recipe {} + {} = {}".format(inputs[0], inputs[1], output))
 
         # Process user input
         if inputs == None and output == None:
-            pass
+            self.log("Attempting to add a user specified recipe")
 
-        # This will automatically overwrite any lingering recipe that resolves into UNKNOWN
-        self.recipes[inputs] = output
+            a = input("Item A: ").strip()
+            b = input("Item B: ").strip()
+            c = input("Item result: ").strip()
 
-    def removeRecipe(self, recipe = None):
+            # Here we check if the user referenced any new items during the generation of this new recipe
+            items = self.getItems()
+            for item in [a, b, c]:
+                if item not in items:
+                    self.addItem(item)
+
+            self.addRecipe((a, b), c)
+
+            return
+
+        assert inputs != None and output != None, "Error in addRecipe()"
+
+        # Here we ensure alphanumerics are upheld in the recipe
+        # [TODO] Find a more elegant way of doing this, I don't like this method at all
+        a = inputs[0]
+        b = inputs[1]
+        if b < a:
+            a = inputs[1]
+            b = inputs[0]
+
+        if (a, b) in self.recipes and self.recipes[(a, b)] != UNKNOWN:
+            self.log("Recipe already exists", level = LEVEL_MED)
+            return
+
+        self.recipes[(a, b)] = output
+
+    def removeRecipe(self, inputs = None):
+        if inputs != None: self.log("Attempting to remove recipe {}".format(inputs))
+
         # Process user input
-        if recipe == None:
-            a = input("Item A: ")
-            b = input("Item B: ")
+        if inputs == None:
+            a = input("Item A: ").strip()
+            b = input("Item B: ").strip()
+            self.removeRecipe((a, b))
+            return
 
-            # [TODO] Fix this and do it the right way. No need to have both a, b AND b, a
-            recipe = (a, b)
-            self.removeRecipe(recipe)
-            recipe = (b, a)
-            self.removeRecipe(recipe)
+        # Here we ensure alphanumerics are upheld in the recipe
+        # [TODO] Find a more elegant way of doing this, I don't like this method at all
+        a = inputs[0]
+        b = inputs[1]
+        if b < a:
+            a = inputs[1]
+            b = inputs[0]
 
-        if recipe in self.recipes:
-            a = recipe[0]
-            b = recipe[1]
-            c = self.recipes[recipe]
-            del self.recipes[recipe]
+        del self.recipes[(a, b)]
+
+    def getRecipesContainingItem(self, item):
+        retVal = []
+        for recipe in self.recipes:
+            if recipe[0] == item or recipe[1] == item or self.recipes[recipe] == item:
+                retVal.append(recipe)
+        return retVal
 
     def renderRecipes(self, known):
         print()
+        counter = 0
         for recipe in sorted(self.recipes):
             if known and self.recipes[recipe] != UNKNOWN:
                 print("{} + {} = {}".format(recipe[0], recipe[1], self.recipes[recipe]))
+                counter += 1
             elif not known and self.recipes[recipe] == UNKNOWN:
                 print("{} + {} = {}".format(recipe[0], recipe[1], self.recipes[recipe]))
+                counter += 1
+        print("\ndiscovered {} recipes".format(counter))
 
     def menu(self):
         print()
         print("What would you like to do:")
-        print("\ta: Add an item")
-        print("\tr: Remove an item")
-        print("\tc: Clear a recipe")
-        print("\ti: List items")
-        print("\tk: List known recipes")
-        print("\tu: List unknown recipes")
-        print("\tq: Quit")
+        print("\t(a)dd an item")
+        print("\t(r)emove an item")
+        print("\t(A)dd a recipe")
+        print("\t(R)emove a recipe")
+        print("\t(k)nown items")
+        print("\t(K)nown recipes")
+        print("\t(u)nknown recipes")
+        print("\t(q)uit")
 
         data = msvcrt.getch().decode("utf-8")
         if data == "a": self.addItem()
         if data == "r": self.removeItem()
-        if data == "c": self.removeRecipe()
-        if data == "i": self.renderItems()
-        if data == "k": self.renderRecipes(known = True)
-        if data == "u": self.renderRecipes(known = False)
+        if data == "A": self.addRecipe()
+        if data == "R": self.removeRecipe()
+        if data == "k": self.renderItems()
+        if data == "K": self.renderRecipes(known = True)
+        if data == "u" or data == "U": self.renderRecipes(known = False)
         if data == "q": return -1
 
         return 0
+
+    def log(self, data, level = LEVEL_LOW): print("[{}] {}".format(level, data))
 
     def run(self):
         while True:
