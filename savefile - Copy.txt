@@ -5,6 +5,7 @@ fire
 hurricane
 lake
 lava
+obsidian
 ocean
 pond
 pressure
@@ -16,7 +17,6 @@ tornado
 water
 wave
 wind
-obsidian = final
 air + air = pressure
 dust + dust = ?
 air + dust = nothing
@@ -108,20 +108,6 @@ pond + smoke = ?
 pressure + smoke = ?
 puddle + smoke = nothing
 sea + smoke = nothing
-steam + steam = ?
-air + steam = ?
-dust + steam = ?
-earth + steam = ?
-fire + steam = ?
-hurricane + steam = ?
-lake + steam = ?
-lava + steam = ?
-ocean + steam = ?
-pond + steam = ?
-pressure + steam = ?
-puddle + steam = ?
-sea + steam = ?
-smoke + steam = ?
 tornado + tornado = nothing
 air + tornado = ?
 dust + tornado = ?
@@ -136,7 +122,6 @@ pressure + tornado = ?
 puddle + tornado = ?
 sea + tornado = hurricane
 smoke + tornado = ?
-steam + tornado = ?
 water + water = puddle
 air + water = ?
 dust + water = ?
@@ -144,13 +129,14 @@ earth + water = ?
 fire + water = ?
 hurricane + water = ?
 lake + water = sea
+lava + water = steam
+lava + water = obsidian
 ocean + water = nothing
 pond + water = lake
 pressure + water = ?
 puddle + water = pond
 sea + water = ocean
 smoke + water = nothing
-steam + water = ?
 tornado + water = ?
 wave + wave = nothing
 air + wave = ?
@@ -166,7 +152,6 @@ pressure + wave = nothing
 puddle + wave = ?
 sea + wave = ?
 smoke + wave = nothing
-steam + wave = ?
 tornado + wave = nothing
 water + wave = nothing
 wind + wind = tornado
@@ -183,7 +168,43 @@ pressure + wind = ?
 puddle + wind = nothing
 sea + wind = ?
 smoke + wind = nothing
-steam + wind = ?
 tornado + wind = nothing
 water + wind = nothing
 wave + wind = nothing
+steam + steam = ?
+air + steam = ?
+dust + steam = ?
+earth + steam = ?
+fire + steam = ?
+hurricane + steam = ?
+lake + steam = ?
+lava + steam = ?
+ocean + steam = ?
+pond + steam = ?
+pressure + steam = ?
+puddle + steam = ?
+sea + steam = ?
+smoke + steam = ?
+steam + tornado = ?
+steam + water = ?
+steam + wave = ?
+steam + wind = ?
+obsidian + obsidian = ?
+air + obsidian = ?
+dust + obsidian = ?
+earth + obsidian = ?
+fire + obsidian = ?
+hurricane + obsidian = ?
+lake + obsidian = ?
+lava + obsidian = ?
+obsidian + ocean = ?
+obsidian + pond = ?
+obsidian + pressure = ?
+obsidian + puddle = ?
+obsidian + sea = ?
+obsidian + smoke = ?
+obsidian + steam = ?
+obsidian + tornado = ?
+obsidian + water = ?
+obsidian + wave = ?
+obsidian + wind = ?

@@ -10,7 +10,10 @@ LEVEL_HIGH = "!"
 class Alchemy:
     def __init__(self):
         self.filename = "savefile.txt"
+
         self.recipes = {}
+        self.finalItems = []
+
         self.load()
 
     def load(self):
@@ -20,19 +23,25 @@ class Alchemy:
 
         # The very first thing we need to do is create a listing of every item and recipe mentioned in the savefile
         itemsFound = []
+        finalItemsFound = []
         recipesFound = {}
         for line in lines:
             a = re.split("\+|=", line)
             for n in range(len(a)): a[n] = a[n].strip()    # [TODO] Find a more elegant way of doing this...
 
-            # Here we merge whatever items we found into all possible items
-            itemsFound += a
+            # Here we merge whatever item we found into all possible items
+            if len(a) == 1: itemsFound += a
+
+            # Here we account for any final items found
+            if len(a) == 2:
+                if a[1] == "final": finalItemsFound.append(a[0])
+                else: self.log("There is an issue with the savefile on line {}".format(line), level = LEVEL_HIGH)
 
             # Here we account for any recipes found
             if len(a) == 3: recipesFound[(a[0], a[1])] = a[2]
 
             # Here we error check for any erronous data in the savefile
-            assert len(a) == 1 or len(a) == 3, "Incorrect data presented for line {}".format(line)
+            assert len(a) == 1 or len(a) == 2 or len(a) == 3, "Incorrect data presented for line {}".format(line)
 
         # Ensure we have no duplicates
         itemsFound = list(set(itemsFound))
@@ -41,6 +50,9 @@ class Alchemy:
         # Now we add all our found items to our instance
         # This will create recipes for every possible item match
         for item in itemsFound: self.addItem(item)
+
+        # Account for any final items we may have encountered
+        for finalItem in finalItemsFound: self.finalItems.append(finalItem)
 
         # Now we add all our found recipes to our instance
         for recipe in recipesFound: self.addRecipe(recipe, recipesFound[recipe])
@@ -58,6 +70,9 @@ class Alchemy:
 
         for item in items:
             f.write(item + "\n")
+
+        for finalItem in self.finalItems:
+            f.write("{} = final\n".format(finalItem))
 
         for recipe in self.recipes:
             a = recipe[0]
@@ -122,18 +137,39 @@ class Alchemy:
 
         items = self.getItems()
 
-        if item not in items:
+        if item not in items and item not in self.finalItems:
             self.log("That item does not exist", level = LEVEL_MED)
             return
 
+        if item in self.finalItems: self.finalItems.remove(item)
         recipes = self.getRecipesContainingItem(item)
         for recipe in recipes: self.removeRecipe(recipe[0], recipe[1])
+
+    # Some items in the game are 'final' and do not mix with anything, this will automatically account for all possible combinations
+    def finalizeItem(self, finalItem = None):
+        if finalItem != None: print("Attempting to finalize item {}".format(finalItem))
+
+        # Process user input
+        if finalItem == None:
+            print("Attempting to finalize a user specified item")
+
+            item = input("Item name: ").strip()
+            self.finalizeItem(item)
+
+            return
+
+        recipes = self.getRecipesContainingItem(finalItem)
+        for recipe in recipes: self.removeRecipe(recipe[0], recipe[1])
+        if finalItem not in self.finalItems:
+            self.finalItems.append(finalItem)
+            self.finalItems.sort()
 
     def renderItems(self):
         print()
         items = self.getItems()
         for item in items: print(item)
-        print("\ndiscovered {} items".format(len(items)))
+        for finalItem in self.finalItems: print("{} = final".format(finalItem))
+        print("\ndiscovered {} items".format(len(items) + len(self.finalItems)))
 
     def addRecipe(self, inputs = None, output = None):
         if inputs != None and output != None: self.log("Attempting to add recipe {} + {} = {}".format(inputs[0], inputs[1], output))
@@ -240,6 +276,7 @@ class Alchemy:
         print("\t(k)nown items")
         print("\t(K)nown recipes")
         print("\t(u)nknown recipes")
+        print("\t(f)inalize item")
         print("\t(q)uit")
 
         data = msvcrt.getch().decode("utf-8")
@@ -250,6 +287,7 @@ class Alchemy:
         if data == "k": self.renderItems()
         if data == "K": self.renderRecipes(known = True)
         if data == "u" or data == "U": self.renderRecipes(known = False)
+        if data == "f": self.finalizeItem()
         if data == "q": return -1
 
         return 0
