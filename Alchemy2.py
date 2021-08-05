@@ -279,16 +279,19 @@ class Alchemy:
         print("\t(f)inalize item")
         print("\t(q)uit")
 
-        data = msvcrt.getch().decode("utf-8")
-        if data == "a": self.addItem()
-        if data == "r": self.removeItem()
-        if data == "A": self.addRecipe()
-        if data == "R": self.removeRecipe()
-        if data == "k": self.renderItems()
-        if data == "K": self.renderRecipes(known = True)
-        if data == "u" or data == "U": self.renderRecipes(known = False)
-        if data == "f": self.finalizeItem()
-        if data == "q": return -1
+        # try/except will handle errant keypresses like the up/down/left/right keys
+        try:
+            data = msvcrt.getch().decode("utf-8")
+            if data == "a": self.addItem()
+            if data == "r": self.removeItem()
+            if data == "A": self.addRecipe()
+            if data == "R": self.removeRecipe()
+            if data == "k": self.renderItems()
+            if data == "K": self.renderRecipes(known = True)
+            if data == "u" or data == "U": self.renderRecipes(known = False)
+            if data == "f": self.finalizeItem()
+            if data == "q": return -1
+        except: pass
 
         return 0
 
