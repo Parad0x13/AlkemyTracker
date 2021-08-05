@@ -9,16 +9,14 @@ LEVEL_HIGH = "!"
 
 class Alchemy:
     def __init__(self):
+        self.filename = "savefile.txt"
         self.recipes = {}
-        #self.recipes = {("air", "earth"): "dust"}
+        self.load()
 
-        self.loadSave()
-
-    def loadSave(self):
-        filename = "savefile.txt"
-
-        f = open(filename, "r+")
+    def load(self):
+        f = open(self.filename, "r+")
         lines = f.read().splitlines()
+        f.close()
 
         # The very first thing we need to do is create a listing of every item and recipe mentioned in the savefile
         itemsFound = []
@@ -46,6 +44,28 @@ class Alchemy:
 
         # Now we add all our found recipes to our instance
         for recipe in recipesFound: self.addRecipe(recipe, recipesFound[recipe])
+
+    def save(self):
+        print("\nSaving...")
+
+        items = self.getItems()
+
+        f = open(self.filename, "r+")
+
+        # Erase the file
+        f.seek(0)
+        f.truncate(0)
+
+        for item in items:
+            f.write(item + "\n")
+
+        for recipe in self.recipes:
+            a = recipe[0]
+            b = recipe[1]
+            c = self.recipes[recipe]
+            f.write("{} + {} = {}\n".format(a, b, c))
+
+        f.close()
 
     # This is accomplished by iterating through every recipe and finding all possible items
     def getItems(self):
@@ -132,6 +152,9 @@ class Alchemy:
 
         assert inputs != None and output != None, "Error in addRecipe()"
 
+        if UNKNOWN in inputs: return    # We don't want to process any recipes whose inputs are unknown
+        if "" in inputs: return    # Likewise we don't want to process recipes that have no item names
+
         # Here we ensure alphanumerics are upheld in the recipe
         # [TODO] Find a more elegant way of doing this, I don't like this method at all
         a = inputs[0]
@@ -215,8 +238,7 @@ class Alchemy:
         while True:
             ret = self.menu()
             if ret == -1: break
-
-        print("\nSaving File...")
+        self.save()
 
 alchemy = Alchemy()
 alchemy.run()
