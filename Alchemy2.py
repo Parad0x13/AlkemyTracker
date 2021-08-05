@@ -110,6 +110,11 @@ class Alchemy:
             self.log("Attempting to add a user specified item")
 
             item = input("Item name: ").strip()
+
+            if " " in item:
+                print("Spaces are not allowed in item names")
+                return
+
             self.addItem(item)
 
             return
@@ -179,8 +184,16 @@ class Alchemy:
             self.log("Attempting to add a user specified recipe")
 
             a = input("Item A: ").strip()
-            b = input("Item B: ").strip()
-            c = input("Output: ").strip()
+
+            # Allow for the option to write itemA itemB itemC instead of hitting enter three times
+            line = a.split(" ")
+            if len(line) == 3:
+                a = line[0]
+                b = line[1]
+                c = line[2]
+            else:
+                b = input("Item B: ").strip()
+                c = input("Output: ").strip()
 
             # Here we check if the user referenced any new items during the generation of this new recipe
             items = self.getItems()
@@ -300,8 +313,8 @@ class Alchemy:
     def run(self):
         while True:
             ret = self.menu()
+            self.save()
             if ret == -1: break
-        self.save()
 
 alchemy = Alchemy()
 alchemy.run()

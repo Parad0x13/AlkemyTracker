@@ -1,0 +1,77 @@
+air
+earth
+fire
+lake
+land
+ocean
+pond
+pressure
+puddle
+sea
+water
+air + air = pressure
+earth + earth = land
+air + earth = ?
+fire + fire = ?
+air + fire = ?
+earth + fire = ?
+lake + lake = sea
+air + lake = ?
+earth + lake = ?
+fire + lake = ?
+ocean + ocean = pressure
+air + ocean = ?
+earth + ocean = ?
+fire + ocean = ?
+lake + ocean = ?
+pond + pond = lake
+air + pond = ?
+earth + pond = ?
+fire + pond = ?
+lake + pond = ?
+ocean + pond = ?
+pressure + pressure = nothing
+air + pressure = ?
+earth + pressure = ?
+fire + pressure = ?
+lake + pressure = ?
+ocean + pressure = ?
+pond + pressure = ?
+puddle + puddle = pond
+air + puddle = ?
+earth + puddle = ?
+fire + puddle = ?
+lake + puddle = ?
+ocean + puddle = ?
+pond + puddle = ?
+pressure + puddle = ?
+sea + sea = ocean
+air + sea = ?
+earth + sea = ?
+fire + sea = ?
+lake + sea = ?
+ocean + sea = ?
+pond + sea = ?
+pressure + sea = ?
+puddle + sea = ?
+water + water = puddle
+air + water = ?
+earth + water = ?
+fire + water = ?
+lake + water = ?
+ocean + water = ?
+pond + water = ?
+pressure + water = nothing
+puddle + water = pond
+sea + water = ocean
+land + land = ?
+air + land = ?
+earth + land = ?
+fire + land = ?
+lake + land = ?
+land + ocean = ?
+land + pond = ?
+land + pressure = ?
+land + puddle = ?
+land + sea = ?
+land + water = ?
