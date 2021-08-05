@@ -170,9 +170,6 @@ class Alchemy:
             a = inputs[1]
             b = inputs[0]
 
-        #if (a, b) in self.recipes and self.recipes[(a, b)] != UNKNOWN:
-        #    self.log("Recipe already exists", level = LEVEL_MED)
-        #    return
         if (a, b) in self.recipes and output in self.recipes[(a, b)]:
             self.log("Recipe already exists", level = LEVEL_MED)
             return
@@ -183,8 +180,6 @@ class Alchemy:
         if output != UNKNOWN:
             # Ensure we remove any recipes that have an unknown value since we now have a valid output
             if UNKNOWN in self.recipes[(a, b)]: self.removeRecipe((a, b), UNKNOWN)
-            # Ensure we remove any recipes that have an nothing value since we now have a valid output
-            if NOTHING in self.recipes[(a, b)]: self.removeRecipe((a, b), NOTHING)    # [TODO] See if this is supposed to be here...
 
     def removeRecipe(self, inputs = None, output = None):
         if inputs != None and output != None: self.log("Attempting to remove recipe {}, {}".format(inputs, output))
