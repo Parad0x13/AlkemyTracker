@@ -63,7 +63,7 @@ class Alchemy:
             a = recipe[0]
             b = recipe[1]
             c = self.recipes[recipe]
-            f.write("{} + {} = {}\n".format(a, b, c))
+            for item in c: f.write("{} + {} = {}\n".format(a, b, item))
 
         f.close()
 
@@ -74,7 +74,7 @@ class Alchemy:
         for recipe in self.recipes:
             items.append(recipe[0])
             items.append(recipe[1])
-            items.append(self.recipes[recipe])
+            for item in self.recipes[recipe]: items.append(item)
 
         items = list(set(items))
 
@@ -127,9 +127,10 @@ class Alchemy:
             return
 
         recipes = self.getRecipesContainingItem(item)
-        for recipe in recipes: self.removeRecipe(recipe)
+        for recipe in recipes: self.removeRecipe(recipe[0], recipe[1])
 
     def renderItems(self):
+        print()
         items = self.getItems()
         for item in items: print(item)
         print("\ndiscovered {} items".format(len(items)))
@@ -143,7 +144,7 @@ class Alchemy:
 
             a = input("Item A: ").strip()
             b = input("Item B: ").strip()
-            c = input("Item result: ").strip()
+            c = input("Output: ").strip()
 
             # Here we check if the user referenced any new items during the generation of this new recipe
             items = self.getItems()
@@ -158,6 +159,7 @@ class Alchemy:
         assert inputs != None and output != None, "Error in addRecipe()"
 
         if UNKNOWN in inputs: return    # We don't want to process any recipes whose inputs are unknown
+        if NOTHING in inputs: return    # We don't want to process any recipes whose inputs are nothing
         if "" in inputs: return    # Likewise we don't want to process recipes that have no item names
 
         # Here we ensure alphanumerics are upheld in the recipe
@@ -168,21 +170,34 @@ class Alchemy:
             a = inputs[1]
             b = inputs[0]
 
-        if (a, b) in self.recipes and self.recipes[(a, b)] != UNKNOWN:
+        #if (a, b) in self.recipes and self.recipes[(a, b)] != UNKNOWN:
+        #    self.log("Recipe already exists", level = LEVEL_MED)
+        #    return
+        if (a, b) in self.recipes and output in self.recipes[(a, b)]:
             self.log("Recipe already exists", level = LEVEL_MED)
             return
 
-        self.recipes[(a, b)] = output
+        if (a, b) not in self.recipes: self.recipes[(a, b)] = []
+        self.recipes[(a, b)].append(output)
 
-    def removeRecipe(self, inputs = None):
-        if inputs != None: self.log("Attempting to remove recipe {}".format(inputs))
+        if output != UNKNOWN:
+            # Ensure we remove any recipes that have an unknown value since we now have a valid output
+            if UNKNOWN in self.recipes[(a, b)]: self.removeRecipe((a, b), UNKNOWN)
+            # Ensure we remove any recipes that have an nothing value since we now have a valid output
+            if NOTHING in self.recipes[(a, b)]: self.removeRecipe((a, b), NOTHING)    # [TODO] See if this is supposed to be here...
+
+    def removeRecipe(self, inputs = None, output = None):
+        if inputs != None and output != None: self.log("Attempting to remove recipe {}, {}".format(inputs, output))
 
         # Process user input
         if inputs == None:
             a = input("Item A: ").strip()
             b = input("Item B: ").strip()
-            self.removeRecipe((a, b))
+            c = input("Output: ").strip()
+            self.removeRecipe((a, b), c)
             return
+
+        assert inputs != None and output != None, "Error in addRecipe()"
 
         # Here we ensure alphanumerics are upheld in the recipe
         # [TODO] Find a more elegant way of doing this, I don't like this method at all
@@ -192,25 +207,32 @@ class Alchemy:
             a = inputs[1]
             b = inputs[0]
 
-        del self.recipes[(a, b)]
+        if output in self.recipes[(a, b)]:
+            self.recipes[(a, b)].remove(output)
+        if self.recipes[(a, b)] == []:    # In the event that there no longer exists any output for the removed output
+            del self.recipes[(a, b)]
 
     def getRecipesContainingItem(self, item):
         retVal = []
-        for recipe in self.recipes:
-            if recipe[0] == item or recipe[1] == item or self.recipes[recipe] == item:
-                retVal.append(recipe)
+        for inputs in self.recipes:
+            for output in self.recipes[inputs]:
+                if inputs[0] == item: retVal.append((inputs, output))
+                elif inputs[1] == item: retVal.append((inputs, output))
+                elif item == output: retVal.append((inputs, output))
         return retVal
 
     def renderRecipes(self, known):
         print()
         counter = 0
         for recipe in sorted(self.recipes):
-            if known and self.recipes[recipe] != UNKNOWN:
-                print("{} + {} = {}".format(recipe[0], recipe[1], self.recipes[recipe]))
-                counter += 1
-            elif not known and self.recipes[recipe] == UNKNOWN:
-                print("{} + {} = {}".format(recipe[0], recipe[1], self.recipes[recipe]))
-                counter += 1
+            for item in self.recipes[recipe]:
+                if known and item != UNKNOWN:
+                    print("{} + {} = {}".format(recipe[0], recipe[1], item))
+                    counter += 1
+                elif not known and item == UNKNOWN:
+                    print("{} + {} = {}".format(recipe[0], recipe[1], item))
+                    counter += 1
+
         print("\ndiscovered {} recipes".format(counter))
 
     def menu(self):
