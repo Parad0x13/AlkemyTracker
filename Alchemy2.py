@@ -74,15 +74,20 @@ class Alchemy:
         for recipe in self.recipes:
             items.append(recipe[0])
             items.append(recipe[1])
-            if self.recipes[recipe] != UNKNOWN:
-                items.append(self.recipes[recipe])
+            items.append(self.recipes[recipe])
 
         items = list(set(items))
+
+        if NOTHING in items: items.remove(NOTHING)
+        if UNKNOWN in items: items.remove(UNKNOWN)
+
         items.sort()    # Not needed but I like it anyways
 
         return items
 
     def addItem(self, item = None):
+        if item == NOTHING: return
+
         if item != None: self.log("Attempting to add item {}".format(item))
 
         # Process user input
