@@ -1,3 +1,9 @@
+# [BUG] There exists a bug where if you try to say nothing currently mixes with an item
+# but there is already at least one recipe that does, it will create two recipes for that item that look like:
+# itemA + itemB = itemC
+# itemA + itemB = nothing
+# This needs to be fixed
+
 import re
 import msvcrt
 
