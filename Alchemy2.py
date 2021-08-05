@@ -78,7 +78,9 @@ class Alchemy:
             a = recipe[0]
             b = recipe[1]
             c = self.recipes[recipe]
-            for item in c: f.write("{} + {} = {}\n".format(a, b, item))
+            for item in c:
+                if item == UNKNOWN: continue    # There is no reason to save unknown combinations, it just inflates filesize
+                f.write("{} + {} = {}\n".format(a, b, item))
 
         f.close()
 
@@ -168,6 +170,23 @@ class Alchemy:
         if finalItem not in self.finalItems:
             self.finalItems.append(finalItem)
             self.finalItems.sort()
+
+    # If an item currently does not match with a single item already discovered we can mass account for it here
+    def noCurrentMatches(self, unmatched = None):
+        if unmatched != None: print("Attempting to unmatch {} against all currently discovered items".format(unmatched))
+
+        # Process user input
+        if unmatched == None:
+            print("Attempting to unmatch a user specified item against all currently discovered items")
+
+            item = input("Item name: ").strip()
+            self.noCurrentMatches(item)
+
+            return
+
+        items = self.getItems()
+        for item in items:
+            self.addRecipe((item, unmatched), NOTHING)
 
     def renderItems(self):
         print()
@@ -290,6 +309,7 @@ class Alchemy:
         print("\t(K)nown recipes")
         print("\t(u)nknown recipes")
         print("\t(f)inalize item")
+        print("\t(n)o current matches")
         print("\t(q)uit")
 
         # try/except will handle errant keypresses like the up/down/left/right keys
@@ -303,6 +323,7 @@ class Alchemy:
             if data == "K": self.renderRecipes(known = True)
             if data == "u" or data == "U": self.renderRecipes(known = False)
             if data == "f": self.finalizeItem()
+            if data == "n": self.noCurrentMatches()
             if data == "q": return -1
         except: pass
 
